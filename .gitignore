@@ -1,0 +1,29 @@
+# 系統檔案
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 編輯器檔案
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 暫存檔案
+*.tmp
+*.temp
+*.log
+
+# 備份檔案
+*.bak
+*.backup
+
+# 壓縮檔案
+*.zip
+*.rar
+*.7z
+
+# 其他
+node_modules/
+.env 

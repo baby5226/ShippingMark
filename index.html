@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>產生裝箱單-明細匯入</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @font-face {
+      font-family: 'NotoSansTC';
+      src: url('NotoSansTC-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    
+    :root {
+      --primary-color: #4f46e5;
+      --primary-light: #e0e7ff;
+      --bg-color: #fafafa;
+      --card-bg: #ffffff;
+      --text-color: #374151;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      --header-bg: #f9fafb;
+      --accent-color: #f59e0b;
+    }
+    body { 
+      background: var(--bg-color); 
+      color: var(--text-color); 
+      font-family: 'NotoSansTC', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+      margin: 0;
+      padding: 26px;
+      line-height: 1.6;
+      font-size: 20px;
+    }
+    .container { 
+      max-width: 1100px; 
+      margin: 0 auto; 
+      background: var(--card-bg); 
+      border-radius: 22px; 
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
+      padding: 53px; 
+      border: 1px solid var(--border-color);
+    }
+    h2 {
+      color: var(--text-color);
+      margin-bottom: 44px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 2.75rem;
+      letter-spacing: -0.025em;
+    }
+    .title-display {
+      background: var(--primary-light);
+      padding: 22px 26px;
+      border-radius: 18px;
+      margin-bottom: 35px;
+      border: 1px solid var(--primary-color);
+      display: none;
+      text-align: center;
+    }
+    .title-display.show {
+      display: block;
+    }
+    .title-display h3 {
+      margin: 0;
+      color: var(--primary-color);
+      font-size: 1.93rem;
+      font-weight: 600;
+    }
+    .button-group {
+      display: flex;
+      gap: 22px;
+      margin-bottom: 35px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 20px 40px;
+      border-radius: 13px;
+      font-size: 1.32rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-width: 198px;
+      white-space: nowrap;
+      box-sizing: border-box;
+    }
+    .btn:hover {
+      background: #4338ca;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    .btn-secondary {
+      background: white;
+      color: var(--text-color);
+      border: 2px solid var(--border-color);
+    }
+    .btn-secondary:hover {
+      background: var(--header-bg);
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+    .btn i {
+      font-size: 1.21rem;
+    }
+    .file-upload-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+    }
+    .file-upload-wrapper input[type=file] {
+      font-size: 100px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    #fileName {
+      display: block;
+      text-align: center;
+      margin: 18px 0 26px 0;
+      color: var(--text-muted);
+      font-size: 1.21rem;
+      padding: 22px;
+      background: var(--header-bg);
+      border-radius: 9px;
+      border: 1px solid var(--border-color);
+    }
+    #generateBtn {
+      background: var(--accent-color);
+      color: white;
+      width: 100%;
+      margin-top: 44px;
+      padding: 26px 0;
+      font-size: 1.54rem;
+      font-weight: 600;
+      border-radius: 18px;
+      transition: all 0.2s ease;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 13px;
+      box-sizing: border-box;
+      min-height: 66px;
+    }
+    #generateBtn:disabled {
+      background: var(--border-color);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    #generateBtn:hover:not(:disabled) {
+      background: #d97706;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    .table-scroll { 
+      overflow: auto;
+      max-height: 550px;
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      background: var(--card-bg);
+      box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+    }
+    .preview-table { 
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 1.4rem;
+    }
+    .preview-table th, .preview-table td {
+      padding: 22px 28px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      word-wrap: break-word;
+      word-break: break-all;
+      max-width: 240px;
+    }
+    .preview-table thead th {
+      background: var(--header-bg);
+      position: sticky;
+      top: 0;
+      font-weight: 600;
+      z-index: 10;
+      color: var(--text-color);
+      border-bottom: 2px solid var(--primary-color);
+      font-size: 1.5rem;
+    }
+    .preview-table tbody tr:nth-child(even) {
+      background: var(--header-bg);
+    }
+    .preview-table tbody tr:hover {
+      background: var(--primary-light);
+    }
+    .status-message {
+      text-align: center;
+      color: var(--text-muted);
+      font-style: italic;
+      margin: 22px 0;
+      padding: 22px;
+      background: var(--header-bg);
+      border-radius: 13px;
+      border: 1px solid var(--border-color);
+      font-size: 1.21rem;
+    }
+  </style>
+  <!-- SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- pdf-lib -->
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <!-- fontkit for pdf-lib 中文字型支援 -->
+  <script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@0.0.4/dist/fontkit.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>產生裝箱單-明細匯入</h2>
+    
+    <div class="button-group">
+      <div class="file-upload-wrapper">
+        <button class="btn"><i class="fas fa-file-excel"></i>選擇 Excel 檔案</button>
+        <input type="file" id="excelFile" accept=".xlsx,.xls" />
+      </div>
+      <button class="btn btn-secondary" id="exportBtn"><i class="fas fa-download"></i>匯出 Excel 範例</button>
+    </div>
+    
+    <span id="fileName">尚未選擇檔案</span>
+    
+    <div class="title-display">
+      <h3 id="titleText">標題列</h3>
+    </div>
+
+    <div class="table-scroll">
+      <table class="preview-table" id="previewTable">
+        <thead><tr><th>請先匯入檔案...</th></tr></thead>
+      </table>
+    </div>
+
+    <button id="generateBtn" disabled><i class="fas fa-file-pdf"></i>產生 PDF 並預覽</button>
+  </div>
+  <script>
+    let excelData = [];
+    let header = [];
+    let titleText = '';
+
+    document.getElementById('excelFile').addEventListener('change', handleFile, false);
+    document.getElementById('generateBtn').addEventListener('click', generatePDF, false);
+    document.getElementById('exportBtn').addEventListener('click', exportExcelTemplate, false);
+
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      document.getElementById('fileName').textContent = file.name;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, {type: 'binary'});
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        // 取第一列作為標題
+        const titleCell = sheet['A1'] ? sheet['A1'].v : '裝箱明細表';
+        titleText = titleCell;
+        document.getElementById('titleText').textContent = titleText;
+        document.querySelector('.title-display').classList.add('show');
+        // 取第二列作為表頭
+        const range = XLSX.utils.decode_range(sheet['!ref']);
+        const headerRow = [];
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cell = sheet[XLSX.utils.encode_cell({r:1, c:C})];
+          headerRow.push(cell ? cell.v : '');
+        }
+        header = headerRow;
+        // 取資料
+        const json = XLSX.utils.sheet_to_json(sheet, {header:1, defval: '', raw: false});
+        excelData = json.slice(2); // 跳過標題與表頭
+        renderPreview();
+        document.getElementById('generateBtn').disabled = false;
+      };
+      reader.readAsBinaryString(file);
+    }
+
+    function renderPreview() {
+      const table = document.getElementById('previewTable');
+      table.innerHTML = '';
+      if (!header.length || !excelData.length) return;
+      const thead = document.createElement('thead');
+      const trh = document.createElement('tr');
+      header.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        trh.appendChild(th);
+      });
+      thead.appendChild(trh);
+      table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      // 顯示完整資料，而不是只顯示10筆
+      excelData.forEach(row => {
+        const tr = document.createElement('tr');
+        header.forEach((_, idx) => {
+          const td = document.createElement('td');
+          td.textContent = row[idx] || '';
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+    }
+
+    async function generatePDF() {
+      if (!header.length || !excelData.length) return;
+      const { PDFDocument, rgb } = PDFLib;
+      const pdfDoc = await PDFDocument.create();
+      pdfDoc.registerFontkit(window.fontkit);
+      // 載入中文字型
+      const fontUrl = 'NotoSansTC-Regular.ttf';
+      const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
+      const customFont = await pdfDoc.embedFont(fontBytes);
+      // 依板號+箱號分組
+      const boardIdx = header.indexOf('板號');
+      const boxIdx = header.indexOf('箱號');
+      if (boardIdx === -1 || boxIdx === -1) {
+        alert('Excel 檔案需包含「板號」與「箱號」欄位！');
+        return;
+      }
+      // 只保留非板號/箱號欄位
+      const tableHeader = header.filter((h, i) => i !== boardIdx && i !== boxIdx);
+      // 只保留指定的 5 個欄位
+      const wantedHeaders = ['貨號', '品號', '品名', '數量', '單位'];
+      const finalTableHeader = tableHeader.filter(h => wantedHeaders.includes(h));
+      const finalColIdx = tableHeader.map((h, i) => wantedHeaders.includes(h) ? i : -1).filter(i => i !== -1);
+      // 分組
+      const groups = {};
+      excelData.forEach(row => {
+        const key = row[boardIdx] + '||' + row[boxIdx];
+        if (!groups[key]) groups[key] = { board: row[boardIdx], box: row[boxIdx], rows: [] };
+        groups[key].rows.push(row);
+      });
+      // 每組一頁
+      for (const key in groups) {
+        const { board, box, rows } = groups[key];
+
+        // 重要：跳過沒有箱號或沒有資料的群組，防止產生空白頁面
+        if (!box || String(box).trim() === '' || rows.length === 0) {
+          continue;
+        }
+
+        // 分頁處理
+        const maxRows = 20; // 每頁最多20筆，無補空白
+        let page = 0;
+        while (page * maxRows < rows.length) {
+          const pageRows = rows.slice(page * maxRows, (page + 1) * maxRows);
+          if (!pageRows.length) break; // 沒有資料就結束
+          const page1 = pdfDoc.addPage([842, 595]); // A4橫式
+          // 背景
+          page1.drawRectangle({ x:0, y:0, width:842, height:595, color:rgb(1,1,1) });
+          
+          // 先定義表格相關變數
+          const tableWidth = 540;
+          const startX = 40, startY = 520;
+          
+          // 標題
+          const titleTextWidth = customFont.widthOfTextAtSize(titleText, 24);
+          page1.drawText(titleText, { 
+            x: startX + (tableWidth - titleTextWidth) / 2, // 表格中間位置
+            y: 550, // 往下移動
+            size: 24, // 放大字體
+            font: customFont, 
+            color: rgb(0,0,0) 
+          });
+          // 右上角黑底白字箱號（x=620, y=400, w=180, h=180，動態字體大小）
+          page1.drawRectangle({ x: 620, y: 400, width: 180, height: 180, color: rgb(0,0,0) });
+          const boxText = String(box);
+          let boxFontSize = 110;
+          let boxTextWidth = customFont.widthOfTextAtSize(boxText, boxFontSize);
+          
+          // 如果文字超出寬度，自動縮小字體
+          while (boxTextWidth > 160 && boxFontSize > 40) { // 留20pt邊距
+            boxFontSize -= 5;
+            boxTextWidth = customFont.widthOfTextAtSize(boxText, boxFontSize);
+          }
+          
+          page1.drawText(boxText, { 
+            x: 620 + (180 - boxTextWidth)/2, 
+            y: 400 + (180 - boxFontSize)/2 + boxFontSize*0.3, // 垂直置中
+            size: boxFontSize, 
+            font: customFont, 
+            color: rgb(1,1,1) 
+          });
+          // 下方黑框白底板號（跟箱號一樣寬度180pt）
+          page1.drawRectangle({ x: 620, y: 300, width: 180, height: 60, color: rgb(1,1,1), borderWidth: 4, borderColor: rgb(0,0,0) });
+          page1.drawRectangle({ x: 620, y: 300, width: 180, height: 60, color: undefined, borderWidth: 4, borderColor: rgb(0,0,0) });
+          const boardTextWidth = customFont.widthOfTextAtSize(board, 48);
+          page1.drawText(board, { x: 620 + (180 - boardTextWidth)/2, y: 300+10, size: 48, font: customFont, color: rgb(0,0,0) });
+          // ======= 表格重寫 =======
+          const colMap = { '貨號':0.12, '品號':0.15, '品名':0.58, '數量':0.075, '單位':0.075 }; // 單位和數量一樣寬
+          const colRatios = finalTableHeader.map(h => colMap[h] || 0.2);
+          const colWidths = colRatios.map(r => r * tableWidth);
+          
+          // 確保表格總寬度正確
+          const actualTableWidth = colWidths.reduce((sum, width) => sum + width, 0);
+          
+          // 計算每列內容的換行數與最大高度
+          const fontSize = 10, linePad = 2, cellPadY = 6, cellPadX = 4;
+          // 表頭高度
+          const headerHeight = 14 + 2*cellPadY; // 表頭字體 14pt，參考 Python 版本
+          // 計算每列高度
+          const rowHeights = pageRows.map(row => {
+            let maxLines = 1;
+            finalColIdx.forEach((colIdx, i) => {
+              const cell = row[colIdx];
+              const text = String(cell || '');
+              const h = finalTableHeader[i];
+              if (h === '品名' || h === '品號') {
+                const maxWidth = colWidths[i] - 8;
+                const lines = wrapText(text, customFont, fontSize, maxWidth);
+                if (lines.length > maxLines) maxLines = lines.length;
+              }
+            });
+            return maxLines * fontSize + 2*cellPadY + (maxLines-1)*linePad;
+          });
+          // 畫表格格線（含表頭）
+          let y = startY;
+          // 上方橫線
+          page1.drawLine({ start: {x: startX, y}, end: {x: startX+actualTableWidth, y}, thickness: 1, color: rgb(0,0,0) });
+          // 表頭
+          let colX = startX;
+          finalTableHeader.forEach((h, i) => {
+            const text = String(h);
+            const maxWidth = colWidths[i] - 8; // 左右各留 4pt 邊距
+            let headerFontSize = 12; // 從 12pt 開始
+
+            let textWidth = customFont.widthOfTextAtSize(text, headerFontSize);
+
+            // 如果文字超出欄寬，自動縮小字體
+            while (textWidth > maxWidth && headerFontSize > 6) {
+              headerFontSize--;
+              textWidth = customFont.widthOfTextAtSize(text, headerFontSize);
+            }
+            
+            // 垂直置中
+            const headerCenterY = y - (headerHeight / 2) - (headerFontSize / 2) * 0.5;
+
+            // 水平置中繪製
+            page1.drawText(text, { 
+              x: colX + (colWidths[i] - textWidth)/2, 
+              y: headerCenterY,
+              size: headerFontSize, 
+              font: customFont, 
+              color: rgb(0,0,0) 
+            });
+            
+            colX += colWidths[i];
+          });
+          // 表頭下方橫線
+          y -= headerHeight;
+          page1.drawLine({ start: {x: startX, y}, end: {x: startX+actualTableWidth, y}, thickness: 1, color: rgb(0,0,0) });
+          // 資料列
+          for (let r = 0; r < pageRows.length; ++r) {
+            const row = pageRows[r];
+            const rowHeight = rowHeights[r];
+            let colX = startX;
+            // 每格內容
+            finalColIdx.forEach((colIdx, i) => {
+              const cell = row[colIdx];
+              const text = String(cell || '');
+              const h = finalTableHeader[i];
+              const maxWidth = colWidths[i] - 2*cellPadX; // 左右各留 4pt 邊距
+              let lines = [text];
+              
+              // 檢查是否需要換行
+              const textWidth = customFont.widthOfTextAtSize(text, fontSize);
+              if (textWidth > maxWidth || h === '品名' || h === '品號') {
+                lines = wrapText(text, customFont, fontSize, maxWidth);
+              }
+              
+              // 垂直置中
+              const totalTextHeight = lines.length*fontSize + (lines.length-1)*linePad;
+              let textY = y - cellPadY - (rowHeight-totalTextHeight)/2;
+              lines.forEach(line => {
+                const lineWidth = customFont.widthOfTextAtSize(line, fontSize);
+                // 根據欄位決定對齊方式：品號和品名靠左，其他欄位居中
+                let textX;
+                if (h === '品號' || h === '品名') {
+                  textX = colX + cellPadX; // 靠左對齊，留左邊距
+                } else {
+                  textX = colX + (colWidths[i] - lineWidth)/2; // 水平置中
+                }
+                page1.drawText(line, {
+                  x: textX,
+                  y: textY,
+                  size: fontSize,
+                  font: customFont,
+                  color: rgb(0,0,0)
+                });
+                textY -= fontSize + linePad;
+              });
+              colX += colWidths[i];
+            });
+            // 畫該列下方橫線
+            y -= rowHeight;
+            page1.drawLine({ start: {x: startX, y}, end: {x: startX+actualTableWidth, y}, thickness: 1, color: rgb(0,0,0) });
+          }
+          // 畫直線（含左右邊）
+          let gridX = startX;
+          for (let i = 0; i <= finalTableHeader.length; ++i) {
+            page1.drawLine({ start: {x: gridX, y: startY}, end: {x: gridX, y: y}, thickness: 1, color: rgb(0,0,0) });
+            if (i < finalTableHeader.length) gridX += colWidths[i];
+          }
+          page++;
+        }
+      }
+      // 輸出 PDF Blob 並新分頁預覽
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], {type: 'application/pdf'});
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+
+      // 自動換行函數
+      function wrapText(text, font, fontSize, maxWidth) {
+        const words = text.split('');
+        let lines = [''];
+        words.forEach(char => {
+          const testLine = lines[lines.length - 1] + char;
+          if (font.widthOfTextAtSize(testLine, fontSize) > maxWidth) {
+            lines.push(char);
+          } else {
+            lines[lines.length - 1] = testLine;
+          }
+        });
+        return lines;
+      }
+    }
+
+    function exportExcelTemplate() {
+      // 建立範例資料 - 只保留標題和表頭
+      const templateData = [
+        ['標題範例'], // 標題
+        ['貨號', '品號', '品名', '數量', '單位', '板號', '箱號'] // 表頭
+      ];
+
+      // 建立工作簿
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(templateData);
+
+      // 設定欄寬
+      ws['!cols'] = [
+        { width: 10 }, // 貨號
+        { width: 15 }, // 品號
+        { width: 35 }, // 品名
+        { width: 8 },  // 數量
+        { width: 8 },  // 單位
+        { width: 8 },  // 板號
+        { width: 8 }   // 箱號
+      ];
+
+      // 加入工作表到工作簿
+      XLSX.utils.book_append_sheet(wb, ws, '裝箱單匯入範例');
+
+      // 下載檔案
+      XLSX.writeFile(wb, '裝箱單匯入範例.xlsx');
+    }
+  </script>
+</body>
+</html> 
