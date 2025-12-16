@@ -319,7 +319,11 @@
           if (rowStr.includes('板號') && rowStr.includes('箱號')) {
             currentHeaderMap = {};
             rowStr.forEach((colName, idx) => {
-              if (colName) currentHeaderMap[colName] = idx;
+              if (colName) {
+                // 自動對應：將「訂量」視為「數量」
+                if (colName === '訂量') colName = '數量';
+                currentHeaderMap[colName] = idx;
+              }
             });
 
             if (i > 0) {
