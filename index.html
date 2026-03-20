@@ -242,6 +242,49 @@
       border: 1px solid var(--border-color);
       font-size: 1.21rem;
     }
+
+    .pdf-font-settings {
+      margin-bottom: 28px;
+      padding: 22px 26px;
+      background: var(--header-bg);
+      border-radius: 18px;
+      border: 1px solid var(--border-color);
+    }
+
+    .pdf-font-settings h4 {
+      margin: 0 0 18px 0;
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .pdf-font-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px 26px;
+      align-items: end;
+    }
+
+    .pdf-font-field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .pdf-font-field input[type="number"] {
+      width: 100%;
+      margin-bottom: 0;
+      font-size: 1.1rem;
+    }
+
+    .pdf-font-field .hint {
+      display: block;
+      margin-top: 6px;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+    }
   </style>
   <!-- SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -267,6 +310,27 @@
 
     <div class="title-display">
       <h3 id="titleText">標題列</h3>
+    </div>
+
+    <div class="pdf-font-settings">
+      <h4><i class="fas fa-font"></i> PDF 嘜頭裝箱明細字體</h4>
+      <div class="pdf-font-grid">
+        <div class="pdf-font-field">
+          <label for="pdfTitleFontPt">頁面標題（如裝箱明細表）</label>
+          <input type="number" id="pdfTitleFontPt" min="12" max="36" value="24" step="1" />
+          <span class="hint">單位：pt，12–36</span>
+        </div>
+        <div class="pdf-font-field">
+          <label for="pdfTableHeaderFontPt">明細表格表頭</label>
+          <input type="number" id="pdfTableHeaderFontPt" min="6" max="22" value="12" step="1" />
+          <span class="hint">貨號、品號、品名等欄位名稱，6–22</span>
+        </div>
+        <div class="pdf-font-field">
+          <label for="pdfTableBodyFontPt">明細表格內容</label>
+          <input type="number" id="pdfTableBodyFontPt" min="6" max="20" value="10" step="1" />
+          <span class="hint">各列資料文字，6–20</span>
+        </div>
+      </div>
     </div>
 
     <div class="table-scroll">
@@ -416,8 +480,23 @@
       table.appendChild(tbody);
     }
 
+    function clampPdfFontPt(value, min, max, fallback) {
+      const n = parseInt(String(value), 10);
+      if (Number.isNaN(n)) return fallback;
+      return Math.min(max, Math.max(min, n));
+    }
+
+    function readPdfDetailFontSizes() {
+      return {
+        titlePt: clampPdfFontPt(document.getElementById('pdfTitleFontPt').value, 12, 36, 24),
+        tableHeaderPt: clampPdfFontPt(document.getElementById('pdfTableHeaderFontPt').value, 6, 22, 12),
+        tableBodyPt: clampPdfFontPt(document.getElementById('pdfTableBodyFontPt').value, 6, 20, 10)
+      };
+    }
+
     async function generatePDF() {
       if (!header.length || !excelData.length) return;
+      const { titlePt, tableHeaderPt, tableBodyPt } = readPdfDetailFontSizes();
       const { PDFDocument, rgb } = PDFLib;
       const pdfDoc = await PDFDocument.create();
       pdfDoc.registerFontkit(window.fontkit);
@@ -473,11 +552,11 @@
 
           // 標題
           const titleToDraw = title || '裝箱明細表';
-          const titleTextWidth = customFont.widthOfTextAtSize(titleToDraw, 24);
+          const titleTextWidth = customFont.widthOfTextAtSize(titleToDraw, titlePt);
           page1.drawText(titleToDraw, {
             x: startX + (tableWidth - titleTextWidth) / 2,
             y: 550,
-            size: 24,
+            size: titlePt,
             font: customFont,
             color: rgb(0, 0, 0)
           });
@@ -514,9 +593,12 @@
           const actualTableWidth = colWidths.reduce((sum, width) => sum + width, 0);
 
           // 計算每列內容的換行數與最大高度
-          const fontSize = 10, linePad = 2, cellPadY = 6, cellPadX = 4;
-          // 表頭高度
-          const headerHeight = 14 + 2 * cellPadY; // 表頭字體 14pt，參考 Python 版本
+          const fontSize = tableBodyPt;
+          const linePad = Math.max(1, Math.round(fontSize * 0.2));
+          const cellPadY = Math.max(4, Math.round(fontSize * 0.55));
+          const cellPadX = 4;
+          // 表頭高度（依表頭字體）
+          const headerHeight = tableHeaderPt + 2 * cellPadY;
           // 計算每列高度
           const rowHeights = pageRows.map(row => {
             let maxLines = 1;
@@ -541,7 +623,7 @@
           displayHeaders.forEach((h, i) => {
             const text = String(h);
             const maxWidth = colWidths[i] - 8; // 左右各留 4pt 邊距
-            let headerFontSize = 12; // 從 12pt 開始
+            let headerFontSize = tableHeaderPt;
 
             let textWidth = customFont.widthOfTextAtSize(text, headerFontSize);
 
