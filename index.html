@@ -502,7 +502,12 @@
       pdfDoc.registerFontkit(window.fontkit);
       // 載入中文字型
       const fontUrl = 'NotoSansTC-Regular.ttf';
-      const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
+      const fontRes = await fetch(fontUrl);
+      if (!fontRes.ok) {
+        alert('找不到字型檔 NotoSansTC-Regular.ttf，請確認它和 index.html 在同一目錄。');
+        return;
+      }
+      const fontBytes = await fontRes.arrayBuffer();
       const customFont = await pdfDoc.embedFont(fontBytes);
 
       // 使用標準索引 (因為 excelData 已經標準化)
@@ -534,16 +539,18 @@
       const displayColIdx = [2, 3, 4, 5, 6];
 
       // 每組一頁
+      let generatedPages = 0;
       for (const key in groups) {
         const { title, board, box, rows } = groups[key];
 
-        if (!box || String(box).trim() === '' || rows.length === 0) continue;
+        if (rows.length === 0) continue;
 
         const maxRows = 20;
         let page = 0;
         while (page * maxRows < rows.length) {
           const pageRows = rows.slice(page * maxRows, (page + 1) * maxRows);
           if (!pageRows.length) break;
+          generatedPages++;
           const page1 = pdfDoc.addPage([842, 595]);
           page1.drawRectangle({ x: 0, y: 0, width: 842, height: 595, color: rgb(1, 1, 1) });
 
@@ -562,7 +569,7 @@
           });
           // 右上角黑底白字箱號（x=620, y=400, w=180, h=180，動態字體大小）
           page1.drawRectangle({ x: 620, y: 400, width: 180, height: 180, color: rgb(0, 0, 0) });
-          const boxText = String(box);
+          const boxText = String(box || '-');
           let boxFontSize = 110;
           let boxTextWidth = customFont.widthOfTextAtSize(boxText, boxFontSize);
 
@@ -704,6 +711,10 @@
           }
           page++;
         }
+      }
+      if (generatedPages === 0) {
+        alert('沒有可輸出的頁面，請確認 Excel 內有有效的明細資料。');
+        return;
       }
       // 輸出 PDF Blob 並新分頁預覽
       const pdfBytes = await pdfDoc.save();
