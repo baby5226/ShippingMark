@@ -311,14 +311,14 @@
       color: var(--ds-text);
       font-family: 'NotoSansTC', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
       padding: 30px 18px;
-      font-size: 18px;
-      line-height: 1.5;
+      font-size: 24px;
+      line-height: 1.65;
     }
 
     .container {
       max-width: 1260px;
       border-radius: 26px;
-      padding: 30px;
+      padding: 36px;
       background: rgba(255, 255, 255, 0.9);
       border: 1px solid #dde5f2;
       box-shadow: var(--ds-shadow);
@@ -340,14 +340,14 @@
     .app-header h2 {
       margin: 0;
       text-align: left;
-      font-size: 2.1rem;
+      font-size: 2.8rem;
       color: var(--ds-text);
     }
 
     .app-subtitle {
       margin: 8px 0 0 0;
       color: var(--ds-text-soft);
-      font-size: 1.02rem;
+      font-size: 1.3rem;
     }
 
     .app-badge {
@@ -356,7 +356,7 @@
       border: 1px solid var(--ds-border);
       background: #fff;
       color: var(--ds-primary);
-      font-size: 0.9rem;
+      font-size: 1.08rem;
       font-weight: 600;
       white-space: nowrap;
     }
@@ -365,28 +365,28 @@
       background: var(--ds-surface);
       border: 1px solid var(--ds-border);
       border-radius: var(--ds-radius-lg);
-      padding: 22px;
-      margin-bottom: 18px;
+      padding: 28px;
+      margin-bottom: 22px;
     }
 
     .panel-title {
       margin: 0 0 14px 0;
-      font-size: 1.18rem;
+      font-size: 1.55rem;
       font-weight: 700;
       color: var(--ds-text);
     }
 
     .button-group {
       justify-content: flex-start;
-      margin-bottom: 14px;
+      margin-bottom: 18px;
     }
 
     .btn {
       background: var(--ds-primary);
       border-radius: 12px;
       min-width: 180px;
-      padding: 14px 24px;
-      font-size: 1rem;
+      padding: 18px 28px;
+      font-size: 1.22rem;
       transition: 160ms ease;
     }
 
@@ -407,8 +407,8 @@
       border: 1px dashed #c2d0e9;
       background: #f7faff;
       text-align: left;
-      padding: 14px 16px;
-      font-size: 0.98rem;
+      padding: 18px 20px;
+      font-size: 1.16rem;
     }
 
     .pdf-font-settings,
@@ -421,11 +421,15 @@
 
     .pdf-font-settings {
       margin-bottom: 18px;
-      padding: 22px;
+      padding: 26px;
     }
 
     .pdf-font-settings h4 {
       margin-bottom: 14px;
+      font-size: 1.45rem;
+    }
+
+    .pdf-font-field label {
       font-size: 1.15rem;
     }
 
@@ -433,6 +437,13 @@
       border-radius: 10px;
       border-color: #c9d5ea;
       background: #fcfdff;
+      font-size: 1.15rem;
+      min-height: 56px;
+    }
+
+    .pdf-font-field .hint {
+      font-size: 1rem;
+      margin-top: 8px;
     }
 
     .title-display {
@@ -444,30 +455,30 @@
     }
 
     .title-display h3 {
-      font-size: 1.2rem;
+      font-size: 1.5rem;
     }
 
     .preview-table {
-      font-size: 1rem;
+      font-size: 1.18rem;
     }
 
     .preview-table th,
     .preview-table td {
-      padding: 14px 16px;
+      padding: 18px 18px;
     }
 
     .preview-table thead th {
-      font-size: 1.02rem;
+      font-size: 1.24rem;
       background: #f3f7ff;
       border-bottom-color: #9fb5e6;
     }
 
     #generateBtn {
       margin-top: 16px;
-      padding: 16px 0;
+      padding: 20px 0;
       min-height: unset;
       border-radius: 14px;
-      font-size: 1.2rem;
+      font-size: 1.5rem;
       background: var(--ds-warning);
     }
 
@@ -477,7 +488,7 @@
 
     @media (max-width: 900px) {
       .container {
-        padding: 18px;
+        padding: 20px;
       }
 
       .app-header {
@@ -486,7 +497,7 @@
       }
 
       .app-header h2 {
-        font-size: 1.7rem;
+        font-size: 2.2rem;
       }
 
       .btn {
@@ -1003,12 +1014,23 @@
     }
 
     function exportExcelTemplate() {
-      // 建立範例資料 - 只保留標題和表頭
+      // 建立範例資料 - 符合「多區塊 + 自動分表頭」格式
       const templateData = [
-        ['標題範例'], // 標題
-        // 依照使用者需求：數量(6)、單位(7)、板號(8)、箱號(9)
+        // ===== 區塊 1 =====
+        ['示例區塊一-海外出貨'], // 區塊標題（建議單一儲存格）
         // 索引: 0:貨號, 1:品號, 2:品名, 3:空, 4:空, 5:數量, 6:單位, 7:板號, 8:箱號
-        ['貨號', '品號', '品名', '', '', '數量', '單位', '板號', '箱號']
+        ['貨號', '品號', '品名', '', '', '數量', '單位', '板號', '箱號'],
+        ['100001', 'SKU0001', '示例商品_手提袋', '', '', 2, '個', 'A', '4'],
+        ['100002', 'SKU0002', '示例商品_保溫袋', '', '', 2, '個', 'A', '4'],
+        [],
+
+        // ===== 區塊 2 =====
+        ['示例區塊二-門市補貨'],
+        ['貨號', '品號', '品名', '', '', '數量', '單位', '板號', '箱號'],
+        ['100101', 'SKU0101', '示例商品_飲料杯提袋', '', '', 3, '個', 'A', '17'],
+        ['100102', 'SKU0102', '示例商品_外帶提袋', '', '', 3, '個', 'A', '17'],
+        // 箱號可輸入範圍，程式會自動展開為 18,19,20
+        ['100103', 'SKU0103', '示例商品_箱號範圍測試', '', '', 1, '個', 'A', '18-20']
       ];
 
       // 建立工作簿
@@ -1032,7 +1054,7 @@
       XLSX.utils.book_append_sheet(wb, ws, '裝箱單匯入範例');
 
       // 下載檔案
-      XLSX.writeFile(wb, '裝箱單匯入範例.xlsx');
+      XLSX.writeFile(wb, '裝箱單匯入範例_多區塊.xlsx');
     }
   </script>
 </body>
