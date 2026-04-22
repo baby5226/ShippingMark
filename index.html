@@ -636,8 +636,14 @@
 
             if (isEmpty) continue;
 
+            // 多區塊格式下，區塊標題列常會落在資料區中，
+            // 這類列通常沒有板號與箱號，需排除避免產生空白頁/空白列。
+            const boardVal = String(rowData['板號'] || '').trim();
+            const boxValRaw = String(rowData['箱號'] || '').trim();
+            if (!boardVal && !boxValRaw) continue;
+
             // 處理箱號範圍 (支援 1-5, 1~5, 1 - 5)
-            const boxVal = rowData['箱號'];
+            const boxVal = boxValRaw;
             const rangeMatch = boxVal.match(/^\s*(\d+)\s*[-~]\s*(\d+)\s*$/);
 
             if (rangeMatch) {
