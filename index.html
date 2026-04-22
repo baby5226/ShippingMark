@@ -611,9 +611,20 @@
             });
 
             if (i > 0) {
-              const prevRow = rawRows[i - 1];
-              const possibleTitle = prevRow.find(c => c && String(c).trim() !== '');
-              if (possibleTitle) currentTitle = String(possibleTitle).trim();
+              // 往上找最近一列「只有單一非空儲存格」的標題列，
+              // 可容忍標題與表頭之間夾空白列。
+              for (let j = i - 1; j >= 0; j--) {
+                const prevRow = rawRows[j] || [];
+                const nonEmptyCells = prevRow
+                  .map(c => String(c || '').trim())
+                  .filter(v => v !== '');
+
+                if (nonEmptyCells.length === 0) continue;
+                if (nonEmptyCells.length === 1) {
+                  currentTitle = nonEmptyCells[0];
+                }
+                break;
+              }
             }
             hasFoundAnyHeader = true;
             document.getElementById('titleText').textContent = hasFoundAnyHeader ? "多個區塊 (參考預覽)" : currentTitle;
